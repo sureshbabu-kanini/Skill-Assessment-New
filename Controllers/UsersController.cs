@@ -155,5 +155,25 @@ namespace SkillAssessment.Controllers
                 });
             }
         }
+
+        // GET: api/Users/GetByEmail
+        [HttpGet("GetByEmail")]
+        public async Task<ActionResult<IEnumerable<User>>> GetUsersByEmail(string userEmail)
+        {
+            try
+            {
+                var users = await _userRepository.GetUsersByEmailAsync(userEmail);
+                return Ok(users);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails
+                {
+                    Status = StatusCodes.Status500InternalServerError,
+                    Title = "Failed to retrieve users by email",
+                    Detail = ex.Message
+                });
+            }
+        }
     }
 }

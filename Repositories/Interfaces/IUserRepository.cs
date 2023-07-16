@@ -11,5 +11,6 @@ namespace SkillAssessment.Repositories.Interfaces
         Task CreateUserAsync(User user);
         Task UpdateUserAsync(User user);
         Task DeleteUserAsync(int id);
+        Task<IEnumerable<User>> GetUsersByEmailAsync(string userEmail); 
     }
 }

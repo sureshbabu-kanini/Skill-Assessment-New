@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Hosting;
 
 namespace SkillAssessment.Controllers
 {
@@ -27,6 +29,13 @@ namespace SkillAssessment.Controllers
                 Title = "An error occurred",
                 Detail = _environment.IsDevelopment() ? exception?.StackTrace : exception?.Message
             };
+
+            // Remove the exception stack trace and API URL from the response in non-production environment
+            if (!_environment.IsProduction())
+            {
+                problemDetails.Extensions.Remove("traceId");
+                problemDetails.Extensions.Remove("source");
+            }
 
             return StatusCode(problemDetails.Status.Value, problemDetails);
         }

@@ -105,6 +105,18 @@ namespace SkillAssessment.Repositories.Implementations
             }
         }
 
+        public async Task<IEnumerable<User>> GetUsersByEmailAsync(string userEmail)
+        {
+            try
+            {
+                return await _context.Users.Where(u => u.User_Email == userEmail).ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Failed to retrieve users by email", ex);
+            }
+        }
+
         private bool UserExists(int id)
         {
             return _context.Users.Any(e => e.User_ID == id);
