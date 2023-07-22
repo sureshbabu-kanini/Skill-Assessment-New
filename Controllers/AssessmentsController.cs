@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using SkillAssessment.Models;
-using SkillAssessment.Repositories.Interfaces;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using SkillAssessment.Models;
 
 namespace SkillAssessment.Controllers
 {
@@ -12,163 +13,92 @@ namespace SkillAssessment.Controllers
     [ApiController]
     public class AssessmentsController : ControllerBase
     {
-        private readonly IAssessmentRepository _assessmentRepository;
+        private readonly UserContext _context;
 
-        public AssessmentsController(IAssessmentRepository assessmentRepository)
+        public AssessmentsController(UserContext context)
         {
-            _assessmentRepository = assessmentRepository;
+            _context = context;
         }
 
+        // GET: api/Assessments
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Assessment>>> GetAssessments()
         {
-            try
-            {
-                var assessments = await _assessmentRepository.GetAssessmentsAsync();
-                return Ok(assessments);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails
-                {
-                    Status = StatusCodes.Status500InternalServerError,
-                    Title = "Failed to retrieve assessments",
-                    Detail = ex.Message
-                });
-            }
+            return await _context.Assessments.ToListAsync();
         }
 
-        [HttpGet("departments")]
-        public async Task<ActionResult<IEnumerable<string>>> GetAllDepartments()
-        {
-            try
-            {
-                var departments = await _assessmentRepository.GetAllDepartmentsAsync();
-                return Ok(departments);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails
-                {
-                    Status = StatusCodes.Status500InternalServerError,
-                    Title = "Failed to retrieve departments",
-                    Detail = ex.Message
-                });
-            }
-        }
-
+        // POST: api/Assessments
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<IActionResult> PostAssessment(Assessment assessment)
+        public async Task<ActionResult<Assessment>> PostAssessment(Assessment assessment)
         {
-            try
+            if (_context.Assessments == null)
             {
-                await _assessmentRepository.CreateAssessmentAsync(assessment);
+                throw new InvalidOperationException("Entity set 'UserContext.Assessment' is null.");
+            }
 
-                if (!IsSwaggerRequest())
-                {
-                    return CreatedAtAction("GetAssessment", new { id = assessment.Assessment_ID }, assessment);
-                }
+            assessment.Assessment_Points = assessment.Assessment_NoOfQuestions * 10;
+            assessment.Assessment_Requested_Date = DateTime.Today;
+            assessment.Assessment_DateOfCompletion = DateTime.Today.AddDays(10);
 
-                return Ok();
-            }
-            catch (InvalidOperationException ex)
+            var user = await _context.Users.FindAsync(assessment.Users.User_ID);
+            if (user == null)
             {
-                return Problem("Entity set 'UserContext.Assessment' is null.", statusCode: StatusCodes.Status500InternalServerError);
+                throw new KeyNotFoundException("User not found.");
             }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound("User not found.");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails
-                {
-                    Status = StatusCodes.Status500InternalServerError,
-                    Title = "Failed to create assessment",
-                    Detail = ex.Message
-                });
-            }
+            assessment.Users = user;
+
+            _context.Assessments.Add(assessment);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction("GetAssessment", new { id = assessment.Assessment_ID }, assessment);
         }
 
-        private bool IsSwaggerRequest()
-        {
-            string? userAgent = Request.Headers["User-Agent"].FirstOrDefault()?.ToLowerInvariant();
-            return !string.IsNullOrEmpty(userAgent) && userAgent.Contains("swagger");
-        }
-
-        [HttpGet("{userId}")]
+        // Custom method: GetAssessmentDetails
+        // GET: api/Assessments/assessment-details/{userId}
+        [HttpGet("assessment-details/{userId}")]
         public async Task<ActionResult<object>> GetAssessmentDetails(int userId)
         {
-            try
-            {
-                var assessmentDetails = await _assessmentRepository.GetAssessmentDetailsAsync(userId);
-
-                if (assessmentDetails == null)
-                {
-                    return NotFound();
-                }
-
-                return Ok(assessmentDetails);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails
-                {
-                    Status = StatusCodes.Status500InternalServerError,
-                    Title = "Failed to retrieve assessment details",
-                    Detail = ex.Message
-                });
-            }
+            return await _context.Users
+                .Where(u => u.User_ID == userId)
+                .Join(
+                    _context.Assessments,
+                    user => user.User_ID,
+                    assessment => assessment.Users.User_ID,
+                    (user, assessment) => new
+                    {
+                        user.User_ID,
+                        FullName = $"{user.User_FirstName} {user.User_LastName}",
+                        user.User_Departmenr,
+                        user.User_Designation,
+                        assessment.Assessment_SelectedLevel
+                    }
+                )
+                .FirstOrDefaultAsync();
         }
 
+        // Custom method: GetMaxAssessment
+        // GET: api/Assessments/max-assessment/{userId}
         [HttpGet("max-assessment/{userId}")]
         public async Task<ActionResult<Assessment>> GetMaxAssessment(int userId)
         {
-            try
-            {
-                var maxAssessment = await _assessmentRepository.GetMaxAssessmentAsync(userId);
-
-                if (maxAssessment == null)
-                {
-                    return NotFound();
-                }
-
-                return Ok(maxAssessment);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails
-                {
-                    Status = StatusCodes.Status500InternalServerError,
-                    Title = "Failed to retrieve assessment",
-                    Detail = ex.Message
-                });
-            }
+            return await _context.Assessments
+                .Where(a => a.Users.User_ID == userId)
+                .OrderByDescending(a => a.Assessment_ID)
+                .FirstOrDefaultAsync();
         }
 
+        // Custom method: GetAssessmentById
+        // GET: api/Assessments/assessment/{assessmentId}
         [HttpGet("assessment/{assessmentId}")]
         public async Task<ActionResult<Assessment>> GetAssessmentById(int assessmentId)
         {
-            try
-            {
-                var assessment = await _assessmentRepository.GetAssessmentByIdAsync(assessmentId);
+            return await _context.Assessments.FindAsync(assessmentId);
+        }
 
-                if (assessment == null)
-                {
-                    return NotFound();
-                }
-
-                return Ok(assessment);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails
-                {
-                    Status = StatusCodes.Status500InternalServerError,
-                    Title = "Failed to retrieve assessment",
-                    Detail = ex.Message
-                });
-            }
+        private bool AssessmentExists(int id)
+        {
+            return _context.Assessments.Any(e => e.Assessment_ID == id);
         }
     }
 }

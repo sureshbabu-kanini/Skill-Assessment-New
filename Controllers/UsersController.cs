@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using SkillAssessment.Models;
 using SkillAssessment.Repositories.Interfaces;
 using System;
@@ -13,10 +14,12 @@ namespace SkillAssessment.Controllers
     public class UsersController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
+        private readonly UserContext _context;
 
-        public UsersController(IUserRepository userRepository)
+        public UsersController(IUserRepository userRepository,UserContext userContext)
         {
             _userRepository = userRepository;
+            _context = userContext;
         }
 
         // GET: api/Users
@@ -107,10 +110,22 @@ namespace SkillAssessment.Controllers
 
         // POST: api/Users
         [HttpPost]
-        public async Task<ActionResult<User>> PostUser(User user)
+        public async Task<ActionResult<User>> PostUser([FromForm] User user, IFormFile imageFile)
         {
             try
             {
+                // Check if an image file was uploaded
+                if (imageFile != null)
+                {
+                    // Convert the image file to Base64 string and store it in the User_Image property
+                    using (var ms = new MemoryStream())
+                    {
+                        await imageFile.CopyToAsync(ms);
+                        user.User_Image = Convert.ToBase64String(ms.ToArray());
+                    }
+                }
+
+                // Save the user to the database
                 await _userRepository.CreateUserAsync(user);
 
                 return CreatedAtAction("GetUser", new { id = user.User_ID }, user);
@@ -175,5 +190,13 @@ namespace SkillAssessment.Controllers
                 });
             }
         }
+
+        [HttpGet("GetByEmailID")]
+        public async Task<int?> GetUserIdByEmailAsync(string userEmail)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.User_Email == userEmail);
+            return user?.User_ID;
+        }
+
     }
 }

@@ -22,6 +22,19 @@ namespace SkillAssessment.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("SkillAssessment.Models.Answer", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.HasKey("Id");
+
+                    b.ToTable("answer");
+                });
+
             modelBuilder.Entity("SkillAssessment.Models.Assessment", b =>
                 {
                     b.Property<int>("Assessment_ID")
@@ -51,125 +64,124 @@ namespace SkillAssessment.Migrations
                     b.Property<string>("Assessment_SelectedTopic")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<TimeSpan>("Assessment_TimeDuration")
-                        .HasColumnType("time");
-
-                    b.Property<int?>("StartAssessmentQuestion_ID")
-                        .HasColumnType("int");
+                    b.Property<string>("Assessment_TimeDuration")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("UsersUser_ID")
                         .HasColumnType("int");
 
                     b.HasKey("Assessment_ID");
 
-                    b.HasIndex("StartAssessmentQuestion_ID");
-
                     b.HasIndex("UsersUser_ID");
 
                     b.ToTable("Assessments");
                 });
 
-            modelBuilder.Entity("SkillAssessment.Models.Questions", b =>
+            modelBuilder.Entity("SkillAssessment.Models.QuestionAnswer", b =>
                 {
-                    b.Property<int>("QnID")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("QnID"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("Answer")
+                    b.Property<int?>("AnswerId")
                         .HasColumnType("int");
 
-                    b.Property<string>("Explaination")
+                    b.Property<int>("QuestionId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("QuestionsQnId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SelectedOption")
+                        .HasColumnType("int");
+
+                    b.Property<int>("topic_id")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AnswerId");
+
+                    b.HasIndex("QuestionsQnId");
+
+                    b.ToTable("questionAnswers");
+                });
+
+            modelBuilder.Entity("SkillAssessment.Models.Questions", b =>
+                {
+                    b.Property<int>("QnId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("QnId"));
+
+                    b.Property<int>("Answer")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Explanation")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Option1")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Option2")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Option3")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Option4")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("Qn")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("QnInWords")
+                        .HasColumnType("nvarchar(250)");
 
-                    b.Property<int?>("TopicsTopic_Id")
+                    b.Property<int?>("topicsTopic_Id")
                         .HasColumnType("int");
 
-                    b.HasKey("QnID");
+                    b.HasKey("QnId");
 
-                    b.HasIndex("TopicsTopic_Id");
+                    b.HasIndex("topicsTopic_Id");
 
                     b.ToTable("Questions");
                 });
 
             modelBuilder.Entity("SkillAssessment.Models.Result", b =>
                 {
-                    b.Property<int>("Result_Id")
+                    b.Property<int>("result_id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Result_Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("result_id"));
 
-                    b.Property<int>("AnsweredCount")
+                    b.Property<int>("AnsweredQuestions")
                         .HasColumnType("int");
 
-                    b.Property<int?>("QuestionsQnID")
+                    b.Property<string>("TimeLeft")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TotalQuestions")
                         .HasColumnType("int");
 
-                    b.Property<int>("SkippedCount")
+                    b.Property<int>("UnansweredQuestions")
                         .HasColumnType("int");
 
-                    b.Property<int>("TotalPoints")
+                    b.Property<int?>("UsersUser_ID")
                         .HasColumnType("int");
 
-                    b.Property<int>("UnansweredCount")
+                    b.Property<int>("WrongAnsweredQuestions")
                         .HasColumnType("int");
 
-                    b.HasKey("Result_Id");
+                    b.Property<int>("points")
+                        .HasColumnType("int");
 
-                    b.HasIndex("QuestionsQnID");
+                    b.HasKey("result_id");
+
+                    b.HasIndex("UsersUser_ID");
 
                     b.ToTable("Results");
-                });
-
-            modelBuilder.Entity("SkillAssessment.Models.StartAssessment", b =>
-                {
-                    b.Property<int>("Question_ID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Question_ID"));
-
-                    b.Property<string>("Option_1")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Option_2")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Option_3")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Option_4")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Points")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("Question_Answer")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Question_Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Question_ID");
-
-                    b.ToTable("StartAssessment");
                 });
 
             modelBuilder.Entity("SkillAssessment.Models.Topics", b =>
@@ -197,58 +209,51 @@ namespace SkillAssessment.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("User_ID"));
 
                     b.Property<string>("User_Address")
-                        .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<DateTime>("User_DOB")
+                    b.Property<DateTime?>("User_DOB")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("User_Departmenr")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("User_Designation")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("User_EduLevel")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("User_Email")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("User_FirstName")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("User_Gender")
-                        .IsRequired()
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
 
+                    b.Property<string>("User_Image")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("User_LastName")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("User_Location")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("User_Password")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<long>("User_PhoneNo")
+                    b.Property<long?>("User_PhoneNo")
                         .HasColumnType("bigint");
 
                     b.HasKey("User_ID");
@@ -258,45 +263,47 @@ namespace SkillAssessment.Migrations
 
             modelBuilder.Entity("SkillAssessment.Models.Assessment", b =>
                 {
-                    b.HasOne("SkillAssessment.Models.StartAssessment", "StartAssessment")
-                        .WithMany("Assessment")
-                        .HasForeignKey("StartAssessmentQuestion_ID");
-
                     b.HasOne("User", "Users")
                         .WithMany("assessments")
                         .HasForeignKey("UsersUser_ID");
 
-                    b.Navigation("StartAssessment");
-
                     b.Navigation("Users");
                 });
 
-            modelBuilder.Entity("SkillAssessment.Models.Questions", b =>
+            modelBuilder.Entity("SkillAssessment.Models.QuestionAnswer", b =>
                 {
-                    b.HasOne("SkillAssessment.Models.Topics", "Topics")
-                        .WithMany("Questions")
-                        .HasForeignKey("TopicsTopic_Id");
+                    b.HasOne("SkillAssessment.Models.Answer", null)
+                        .WithMany("QuestionAnswers")
+                        .HasForeignKey("AnswerId");
 
-                    b.Navigation("Topics");
-                });
-
-            modelBuilder.Entity("SkillAssessment.Models.Result", b =>
-                {
                     b.HasOne("SkillAssessment.Models.Questions", "Questions")
-                        .WithMany("Results")
-                        .HasForeignKey("QuestionsQnID");
+                        .WithMany()
+                        .HasForeignKey("QuestionsQnId");
 
                     b.Navigation("Questions");
                 });
 
             modelBuilder.Entity("SkillAssessment.Models.Questions", b =>
                 {
-                    b.Navigation("Results");
+                    b.HasOne("SkillAssessment.Models.Topics", "topics")
+                        .WithMany("Questions")
+                        .HasForeignKey("topicsTopic_Id");
+
+                    b.Navigation("topics");
                 });
 
-            modelBuilder.Entity("SkillAssessment.Models.StartAssessment", b =>
+            modelBuilder.Entity("SkillAssessment.Models.Result", b =>
                 {
-                    b.Navigation("Assessment");
+                    b.HasOne("User", "Users")
+                        .WithMany("results")
+                        .HasForeignKey("UsersUser_ID");
+
+                    b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("SkillAssessment.Models.Answer", b =>
+                {
+                    b.Navigation("QuestionAnswers");
                 });
 
             modelBuilder.Entity("SkillAssessment.Models.Topics", b =>
@@ -307,6 +314,8 @@ namespace SkillAssessment.Migrations
             modelBuilder.Entity("User", b =>
                 {
                     b.Navigation("assessments");
+
+                    b.Navigation("results");
                 });
 #pragma warning restore 612, 618
         }

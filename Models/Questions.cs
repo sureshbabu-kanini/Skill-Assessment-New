@@ -1,19 +1,30 @@
 ﻿using MessagePack;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SkillAssessment.Models
 {
     public class Questions
     {
         [System.ComponentModel.DataAnnotations.Key]
-        public int QnID { get; set; }
-        public string Qn { get; set; }
+        public int QnId { get; set; }
+
+        [Column(TypeName = "nvarchar(250)")]
+        public string QnInWords { get; set; }
+
+        [Column(TypeName = "nvarchar(50)")]
         public string Option1 { get; set; }
+
+        [Column(TypeName = "nvarchar(50)")]
         public string Option2 { get; set; }
+
+        [Column(TypeName = "nvarchar(50)")]
         public string Option3 { get; set; }
+
+        [Column(TypeName = "nvarchar(50)")]
         public string Option4 { get; set; }
-        public Nullable<int> Answer { get; set; }
-        public string Explaination { get; set; }
-        public Topics? Topics { get; set; }
-        public ICollection<Result> Results { get; set; }
+        public string Explanation { get; set; }
+        public int Answer { get; set; }
+        public Topics? topics { get; set; }
     }
 }

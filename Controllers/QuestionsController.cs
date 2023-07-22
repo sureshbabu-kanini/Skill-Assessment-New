@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using SkillAssessment.Models;
-using SkillAssessment.Repositories.Interfaces;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using SkillAssessment.Models;
 
 namespace SkillAssessment.Controllers
 {
@@ -12,71 +13,53 @@ namespace SkillAssessment.Controllers
     [ApiController]
     public class QuestionsController : ControllerBase
     {
-        private readonly IQuestionRepository _questionRepository;
+        private readonly UserContext _context;
 
-        public QuestionsController(IQuestionRepository questionRepository)
+        public QuestionsController(UserContext context)
         {
-            _questionRepository = questionRepository;
+            _context = context;
         }
 
+        // GET: api/Questions
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Questions>>> GetQuestions()
+        public async Task<ActionResult<IEnumerable<Questions>>> Getquestions()
         {
-            var random5Qns = await _questionRepository.GetRandomQuestionsAsync(5);
-            var result = random5Qns.Select(x => new
-            {
-                QnID = x.QnID,
-                Qn = x.Qn,
-                Option1 = x.Option1,
-                Option2 = x.Option2,
-                Option3 = x.Option3,
-                Option4 = x.Option4
-            }).ToList();
-
-            return Ok(result);
+            return await _context.Questions.ToListAsync();
         }
 
+        // GET: api/Questions/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Questions>> GetQuestion(int id)
+        public async Task<ActionResult<Questions>> GetQuestions(int id)
         {
-            var question = await _questionRepository.GetQuestionAsync(id);
+            var questions = await _context.Questions.FindAsync(id);
 
-            if (question == null)
+            if (questions == null)
             {
                 return NotFound();
             }
 
-            return question;
+            return questions;
         }
 
-        [HttpPost]
-        public async Task<ActionResult<Questions>> PostQuestion(Questions question)
-        {
-            if (question == null)
-            {
-                return BadRequest();
-            }
-
-            await _questionRepository.CreateQuestionAsync(question);
-
-            return CreatedAtAction("GetQuestion", new { id = question.QnID }, question);
-        }
-
+        // PUT: api/Questions/5
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutQuestion(int id, Questions question)
+        public async Task<IActionResult> PutQuestions(int id, Questions questions)
         {
-            if (id != question.QnID)
+            if (id != questions.QnId)
             {
                 return BadRequest();
             }
+
+            _context.Entry(questions).State = EntityState.Modified;
 
             try
             {
-                await _questionRepository.UpdateQuestionAsync(question);
+                await _context.SaveChangesAsync();
             }
-            catch (Exception)
+            catch (DbUpdateConcurrencyException)
             {
-                if (!await _questionRepository.QuestionExistsAsync(id))
+                if (!QuestionsExists(id))
                 {
                     return NotFound();
                 }
@@ -89,18 +72,45 @@ namespace SkillAssessment.Controllers
             return NoContent();
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteQuestion(int id)
+        // POST: api/Questions
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPost]
+        public async Task<ActionResult<Questions>> PostQuestions(Questions questions)
         {
-            var question = await _questionRepository.GetQuestionAsync(id);
-            if (question == null)
+            var topic = await _context.Topics.FindAsync(questions.topics.Topic_Id);
+            questions.topics = topic;
+            _context.Questions.Add(questions);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction("GetQuestions", new { id = questions.QnId }, questions);
+        }
+
+        // DELETE: api/Questions/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteQuestions(int id)
+        {
+            var questions = await _context.Questions.FindAsync(id);
+            if (questions == null)
             {
                 return NotFound();
             }
 
-            await _questionRepository.DeleteQuestionAsync(question);
+            _context.Questions.Remove(questions);
+            await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+        [HttpGet("topicid")]
+        public IActionResult GetQuestionsByTopic(int topicId)
+        {
+            var questions = _context.Questions.Where(q => q.topics.Topic_Id == topicId).ToList();
+
+            return Ok(questions);
+        }
+
+        private bool QuestionsExists(int id)
+        {
+            return _context.Questions.Any(e => e.QnId == id);
         }
     }
 }

@@ -15,7 +15,7 @@ namespace SkillAssessment.Models
 
         public int Assessment_Points { get; set; }
 
-        public TimeSpan Assessment_TimeDuration { get; set; }
+        public string Assessment_TimeDuration { get; set; }
 
         public DateTime Assessment_Requested_Date { get; set; }
 
@@ -25,6 +25,5 @@ namespace SkillAssessment.Models
 
         public int Assessment_NoOfQuestions { get; set; }
         public User? Users { get; set; }
-        public StartAssessment? StartAssessment { get; set; }
     }
 }

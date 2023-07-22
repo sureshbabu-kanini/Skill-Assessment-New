@@ -117,6 +117,12 @@ namespace SkillAssessment.Repositories.Implementations
             }
         }
 
+        public async Task<int?> GetUserIdByEmailAsync(string userEmail)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.User_Email == userEmail);
+            return user?.User_ID;
+        }
+
         private bool UserExists(int id)
         {
             return _context.Users.Any(e => e.User_ID == id);
