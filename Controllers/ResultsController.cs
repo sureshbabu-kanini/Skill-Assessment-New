@@ -176,6 +176,8 @@ namespace SkillAssessment.Controllers
             return Ok(totalPoints);
         }
 
+
+
         private bool ResultExists(int id)
         {
             return _context.Results.Any(e => e.result_id == id);

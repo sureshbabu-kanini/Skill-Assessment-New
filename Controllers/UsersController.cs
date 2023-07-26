@@ -198,13 +198,15 @@ namespace SkillAssessment.Controllers
             return user?.User_ID;
         }
 
-        // GET: api/Users/GetUnmatchedUserByEmail
+        // Modify the API method to implement the DTO inline
         [HttpGet("GetUnmatchedUserByEmail")]
-        public async Task<ActionResult<IEnumerable<User>>> GetUnmatchedUsersByEmail(string userEmail)
+        public async Task<ActionResult<IEnumerable<object>>> GetUnmatchedUsersByEmail(string userEmail)
         {
             try
             {
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.User_Email == userEmail);
+                // Retrieve the user with the provided email
+                var user = await _context.Users
+                    .FirstOrDefaultAsync(u => u.User_Email == userEmail);
 
                 if (user == null)
                 {
@@ -216,9 +218,45 @@ namespace SkillAssessment.Controllers
                     });
                 }
 
-                var unmatchedUsers = await _context.Users.Where(u => u.User_Email != userEmail).ToListAsync();
+                // Retrieve all unmatched users based on the provided email
+                var unmatchedUsers = await _context.Users
+                    .Where(u => u.User_Email != userEmail)
+                    .Include(x => x.results)
+                    .ToListAsync();
 
-                return Ok(unmatchedUsers);
+                // Create a list to store the user data with total points
+                var unmatchedUsersWithTotalPoints = new List<object>();
+
+                foreach (var unmatchedUser in unmatchedUsers)
+                {
+                    // Calculate the total points for the user by summing up the points from all results
+                    int totalPoints = unmatchedUser.results.Sum(r => r.points);
+
+                    // Create an anonymous object with user data and total points
+                    var userWithTotalPoints = new
+                    {
+                        unmatchedUser.User_ID,
+                        unmatchedUser.User_FirstName,
+                        unmatchedUser.User_LastName,
+                        unmatchedUser.User_Address,
+                        unmatchedUser.User_Departmenr,
+                        unmatchedUser.User_Designation,
+                        unmatchedUser.User_Email,
+                        unmatchedUser.User_DOB,
+                        unmatchedUser.User_EduLevel,
+                        unmatchedUser.User_Gender,
+                        TotalPoints = totalPoints,
+                        unmatchedUser.assessments,
+                        unmatchedUser.results
+                        
+                    };
+
+                    // Add the anonymous object to the list
+                    unmatchedUsersWithTotalPoints.Add(userWithTotalPoints);
+                }
+
+                // Return the list of anonymous objects containing user data with total points
+                return Ok(unmatchedUsersWithTotalPoints);
             }
             catch (Exception ex)
             {
@@ -226,6 +264,62 @@ namespace SkillAssessment.Controllers
                 {
                     Status = StatusCodes.Status500InternalServerError,
                     Title = "Failed to retrieve unmatched users by email",
+                    Detail = ex.Message
+                });
+            }
+        }
+
+        // GET: api/Users/GetUsersByEmailWithResultCount
+        [HttpGet("GetUsersByEmailWithResultCount")]
+        public async Task<ActionResult<IEnumerable<object>>> GetUsersByEmailWithResultCount(string userEmail)
+        {
+            try
+            {
+                var usersWithResults = await _context.Users
+                    .Where(u => u.User_Email == userEmail)
+                    .Include(u => u.results)
+                    .ToListAsync();
+
+                if (!usersWithResults.Any())
+                {
+                    return NotFound(new ProblemDetails
+                    {
+                        Status = StatusCodes.Status404NotFound,
+                        Title = "User not found",
+                        Detail = "No user found with the specified email."
+                    });
+                }
+
+                var usersWithResultCount = new List<object>();
+
+                foreach (var user in usersWithResults)
+                {
+                    int resultCount = user.results.Count;
+
+                    var resultsData = await _context.Results
+                        .Where(r => r.users.User_ID == user.User_ID)
+                        .ToListAsync();
+
+                    var userWithResultCount = new
+                    {
+                        user.User_ID,
+                        user.User_FirstName,
+                        user.User_LastName,
+                        ResultCount = resultCount,
+                        ResultsData = resultsData 
+                    };
+
+                    usersWithResultCount.Add(userWithResultCount);
+                }
+
+                return Ok(usersWithResultCount);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails
+                {
+                    Status = StatusCodes.Status500InternalServerError,
+                    Title = "Failed to retrieve users by email with result count",
                     Detail = ex.Message
                 });
             }

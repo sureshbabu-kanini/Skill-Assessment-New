@@ -109,7 +109,7 @@ namespace SkillAssessment.Repositories.Implementations
         {
             try
             {
-                return await _context.Users.Where(u => u.User_Email == userEmail).ToListAsync();
+                return await _context.Users.Where(u => u.User_Email == userEmail).Include(x=>x.results).ToListAsync();
             }
             catch (Exception ex)
             {
