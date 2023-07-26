@@ -113,30 +113,6 @@ namespace SkillAssessment.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Results",
-                columns: table => new
-                {
-                    result_id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    TotalQuestions = table.Column<int>(type: "int", nullable: false),
-                    AnsweredQuestions = table.Column<int>(type: "int", nullable: false),
-                    UnansweredQuestions = table.Column<int>(type: "int", nullable: false),
-                    WrongAnsweredQuestions = table.Column<int>(type: "int", nullable: false),
-                    TimeLeft = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    points = table.Column<int>(type: "int", nullable: false),
-                    UsersUser_ID = table.Column<int>(type: "int", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Results", x => x.result_id);
-                    table.ForeignKey(
-                        name: "FK_Results_Users_UsersUser_ID",
-                        column: x => x.UsersUser_ID,
-                        principalTable: "Users",
-                        principalColumn: "User_ID");
-                });
-
-            migrationBuilder.CreateTable(
                 name: "questionAnswers",
                 columns: table => new
                 {
@@ -163,6 +139,40 @@ namespace SkillAssessment.Migrations
                         principalColumn: "Id");
                 });
 
+            migrationBuilder.CreateTable(
+                name: "Results",
+                columns: table => new
+                {
+                    result_id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TotalQuestions = table.Column<int>(type: "int", nullable: false),
+                    AnsweredQuestions = table.Column<int>(type: "int", nullable: false),
+                    UnansweredQuestions = table.Column<int>(type: "int", nullable: false),
+                    WrongAnsweredQuestions = table.Column<int>(type: "int", nullable: false),
+                    TimeLeft = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    points = table.Column<int>(type: "int", nullable: false),
+                    passorfail = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    date = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    starttime = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    endtime = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Assessment_ID = table.Column<int>(type: "int", nullable: true),
+                    usersUser_ID = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Results", x => x.result_id);
+                    table.ForeignKey(
+                        name: "FK_Results_Assessments_Assessment_ID",
+                        column: x => x.Assessment_ID,
+                        principalTable: "Assessments",
+                        principalColumn: "Assessment_ID");
+                    table.ForeignKey(
+                        name: "FK_Results_Users_usersUser_ID",
+                        column: x => x.usersUser_ID,
+                        principalTable: "Users",
+                        principalColumn: "User_ID");
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_Assessments_UsersUser_ID",
                 table: "Assessments",
@@ -184,17 +194,19 @@ namespace SkillAssessment.Migrations
                 column: "topicsTopic_Id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Results_UsersUser_ID",
+                name: "IX_Results_Assessment_ID",
                 table: "Results",
-                column: "UsersUser_ID");
+                column: "Assessment_ID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Results_usersUser_ID",
+                table: "Results",
+                column: "usersUser_ID");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "Assessments");
-
             migrationBuilder.DropTable(
                 name: "questionAnswers");
 
@@ -208,10 +220,13 @@ namespace SkillAssessment.Migrations
                 name: "answer");
 
             migrationBuilder.DropTable(
-                name: "Users");
+                name: "Assessments");
 
             migrationBuilder.DropTable(
                 name: "Topics");
+
+            migrationBuilder.DropTable(
+                name: "Users");
         }
     }
 }

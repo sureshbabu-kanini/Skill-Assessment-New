@@ -24,7 +24,7 @@ namespace SkillAssessment.Controllers
         [ProducesResponseType(typeof(IEnumerable<Result>), 200)]
         public async Task<ActionResult<IEnumerable<Result>>> GetResult()
         {
-            var results = await _context.Results.Include(x => x.Users).ToListAsync();
+            var results = await _context.Results.Include(x => x.users).ToListAsync();
             return Ok(results);
         }
 
@@ -80,14 +80,34 @@ namespace SkillAssessment.Controllers
         [HttpPost]
         public async Task<ActionResult<Result>> PostResult(Result result)
         {
-            var user = await _context.Users.FindAsync(result.Users.User_ID);
+            // Calculate pass or fail based on the values
+            if (result.AnsweredQuestions >= result.TotalQuestions / 2)
+            {
+                result.passorfail = "Pass";
+            }
+            else
+            {
+                result.passorfail = "Fail";
+            }
+
+            var user = await _context.Users.FindAsync(result.users.User_ID);
 
             if (user == null)
             {
                 return BadRequest("Invalid user ID");
             }
 
-            result.Users = user;
+            result.users = user;
+
+            var assessment = await _context.Assessments.FindAsync(result.assessment.Assessment_ID);
+            if (assessment == null)
+            {
+                return BadRequest("invalid assessment id");
+            }
+            result.assessment = assessment;
+
+            // Set the date to today's date
+            result.date = DateTime.Today.ToString("yyyy-MM-dd");
 
             _context.Results.Add(result);
             await _context.SaveChangesAsync();
@@ -110,6 +130,50 @@ namespace SkillAssessment.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        [HttpGet("GetResultsByUserId/{userId}")]
+        public async Task<ActionResult<IEnumerable<Result>>> GetResultsByUserId(int userId)
+        {
+            var results = await _context.Results
+                .Where(r => r.users.User_ID == userId)
+                .Include(r => r.users) 
+                .Include(r => r.assessment) 
+                .ToListAsync();
+
+            if (results == null || results.Count == 0)
+            {
+                return NotFound("No results found for the specified user ID.");
+            }
+
+            return Ok(results);
+        }
+
+        // GET: api/Results/GetResultCountByUserId/
+        [HttpGet("GetResultCountByUserId/{userId}")]
+        public async Task<ActionResult<int>> GetResultCountByUserId(int userId)
+        {
+            var resultCount = await _context.Results
+                .CountAsync(r => r.users.User_ID == userId);
+
+            return Ok(resultCount);
+        }
+
+        [HttpGet("GetTotalPointsByUserId/{userId}")]
+        public async Task<ActionResult<int>> GetTotalPointsByUserId(int userId)
+        {
+            var results = await _context.Results
+                .Where(r => r.users.User_ID == userId)
+                .ToListAsync();
+
+            if (results == null || results.Count == 0)
+            {
+                return NotFound("No results found for the specified user ID.");
+            }
+
+            int totalPoints = results.Sum(r => r.points);
+
+            return Ok(totalPoints);
         }
 
         private bool ResultExists(int id)

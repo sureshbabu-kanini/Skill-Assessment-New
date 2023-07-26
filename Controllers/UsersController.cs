@@ -198,5 +198,39 @@ namespace SkillAssessment.Controllers
             return user?.User_ID;
         }
 
+        // GET: api/Users/GetUnmatchedUserByEmail
+        [HttpGet("GetUnmatchedUserByEmail")]
+        public async Task<ActionResult<IEnumerable<User>>> GetUnmatchedUsersByEmail(string userEmail)
+        {
+            try
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.User_Email == userEmail);
+
+                if (user == null)
+                {
+                    return NotFound(new ProblemDetails
+                    {
+                        Status = StatusCodes.Status404NotFound,
+                        Title = "User not found",
+                        Detail = "No user found with the specified email."
+                    });
+                }
+
+                var unmatchedUsers = await _context.Users.Where(u => u.User_Email != userEmail).ToListAsync();
+
+                return Ok(unmatchedUsers);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails
+                {
+                    Status = StatusCodes.Status500InternalServerError,
+                    Title = "Failed to retrieve unmatched users by email",
+                    Detail = ex.Message
+                });
+            }
+        }
+
+
     }
 }

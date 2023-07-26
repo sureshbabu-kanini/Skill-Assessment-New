@@ -159,6 +159,9 @@ namespace SkillAssessment.Migrations
                     b.Property<int>("AnsweredQuestions")
                         .HasColumnType("int");
 
+                    b.Property<int?>("Assessment_ID")
+                        .HasColumnType("int");
+
                     b.Property<string>("TimeLeft")
                         .HasColumnType("nvarchar(max)");
 
@@ -168,18 +171,32 @@ namespace SkillAssessment.Migrations
                     b.Property<int>("UnansweredQuestions")
                         .HasColumnType("int");
 
-                    b.Property<int?>("UsersUser_ID")
-                        .HasColumnType("int");
-
                     b.Property<int>("WrongAnsweredQuestions")
                         .HasColumnType("int");
+
+                    b.Property<string>("date")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("endtime")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("passorfail")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("points")
                         .HasColumnType("int");
 
+                    b.Property<string>("starttime")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("usersUser_ID")
+                        .HasColumnType("int");
+
                     b.HasKey("result_id");
 
-                    b.HasIndex("UsersUser_ID");
+                    b.HasIndex("Assessment_ID");
+
+                    b.HasIndex("usersUser_ID");
 
                     b.ToTable("Results");
                 });
@@ -294,11 +311,17 @@ namespace SkillAssessment.Migrations
 
             modelBuilder.Entity("SkillAssessment.Models.Result", b =>
                 {
-                    b.HasOne("User", "Users")
-                        .WithMany("results")
-                        .HasForeignKey("UsersUser_ID");
+                    b.HasOne("SkillAssessment.Models.Assessment", "assessment")
+                        .WithMany()
+                        .HasForeignKey("Assessment_ID");
 
-                    b.Navigation("Users");
+                    b.HasOne("User", "users")
+                        .WithMany("results")
+                        .HasForeignKey("usersUser_ID");
+
+                    b.Navigation("assessment");
+
+                    b.Navigation("users");
                 });
 
             modelBuilder.Entity("SkillAssessment.Models.Answer", b =>
