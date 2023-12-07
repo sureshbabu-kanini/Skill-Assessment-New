@@ -27,7 +27,7 @@ namespace SkillAssessment.Controllers
             return await _context.answer.ToListAsync();
         }
 
-        // GET: api/Answers/5
+
         [HttpGet("{id}")]
         public async Task<ActionResult<Answer>> GetAnswer(int id)
         {
